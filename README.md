@@ -28,3 +28,9 @@ diff snapshot_name
 
 比較現在的狀態與存在 snapshot_name 裡的狀態有何差異
 這裡是指有哪些變數被新增、刪除、或是修改
+
+=================
+
+已知限制:
+1.無法 restore 到 其他函數狀態。 因為這是 jump 的限制。
+jump 無法跳到其他 pyframe 去。
