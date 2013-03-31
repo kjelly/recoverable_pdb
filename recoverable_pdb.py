@@ -4,8 +4,8 @@ import sys
 
 
 def try_copy(data):
-    # some inner structure use dict or list.
-    if isinstance(data, dict) or isinstance(data, list):
+    # some inner structure use dict.
+    if isinstance(data, dict):
         ret = {}
         for i in data:
             new_copy = try_copy(data[i])
@@ -23,6 +23,20 @@ def try_copy(data):
     return data 
 
 
+def diff_dict(old, new):
+    ret = {}
+    create_dict = lambda o, n: {'old': o, 'new': n}
+    for i in old:
+        if i not in new:
+            ret[i] = create_dict(old[i], 'not defined')
+        elif old[i] != new[i]:
+            ret[i] = create_dict(old[i], new[i])
+
+    for i in new:
+        if i not in old:
+            ret[i] = create_dict('not defined', new[i])
+
+    return ret
 
 class RecoverablePdb(pdb.Pdb):
     def __init__(self, *args, **kwargs):
@@ -35,7 +49,6 @@ class RecoverablePdb(pdb.Pdb):
         self.snapshot[arg] = (backup_locals, lineno)
 
     def do_restore(self, arg):
-        print self.snapshot
         if arg not in self.snapshot:
             print 'no such name'
             return
@@ -44,6 +57,23 @@ class RecoverablePdb(pdb.Pdb):
             return
 
         self.restore_env(self.snapshot[arg][0])
+    
+    def do_diff(self, arg):
+        if arg not in self.snapshot:
+            print 'no such name'
+            return
+
+        result = diff_dict(self.snapshot[arg][0], self.curframe_locals)
+        for i in result:
+            print 'variable name: ', i
+            print '------------------'
+            print 'old value: '
+            print result[i]['old']
+            print '------------------'
+            print 'new value: '
+            print result[i]['new']
+            print '=================='
+
 
     def restore_env(self, env):
         # some variable is defined latter.
