@@ -35,3 +35,5 @@ diff snapshot_name
 
 1.無法 restore 到 其他函數狀態。 因為這是 jump 的限制。
 jump 無法跳到其他 pyframe 去。
+
+註: 隨手寫的，沒有作嚴謹的測試。可能會有不少 bug。
