@@ -2,8 +2,12 @@ recoverable_pdb
 ===============
 
 The project try to provide the pdb with recovery function.
+Like time machine, you can recovery to the point you save without restarting whole program..
 The code only test in windows python 2.7.
 Maybe it can't work in other version.
+
+Known issues:
+  it can't work with pdb++
 
 
 使用說明:
@@ -14,6 +18,11 @@ Maybe it can't work in other version.
 save snapshot_name
 
 這道指令的作用是把現在的 local variable 值都存在 snapshot_name 裡。
+The usage is the same as pdb. But I add three command for it.
+
+  save point_name: save current runtime envir. So you can restore the runtime using restore command.
+  restore point_name: recovery to the point you save.
+  diff: compare current runtime envir from the runtime env you saved.
 
 ===============
 
