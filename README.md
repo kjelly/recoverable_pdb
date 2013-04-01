@@ -21,8 +21,11 @@ save snapshot_name
 The usage is the same as pdb. But I add three command for it.
 
   save point_name: save current runtime envir. So you can restore the runtime using restore command.
+    
   restore point_name: recovery to the point you save.
+  
   diff: compare current runtime envir from the runtime env you saved.
+  
 
 ===============
 
