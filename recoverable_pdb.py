@@ -39,31 +39,32 @@ def diff_dict(old, new):
     return ret
 
 class RecoverablePdb(pdb.Pdb):
-    def __init__(self, *args, **kwargs):
-        pdb.Pdb.__init__(self, *args, **kwargs)
+    def __init__(self, *argss, **kwargss):
+        pdb.Pdb.__init__(self, *argss, **kwargss)
         self.snapshot = {}
+        self.undo_stack = []
 
-    def do_save(self, arg):
+    def do_save(self, args):
         backup_locals = try_copy(self.curframe_locals)
         lineno = self.curframe.f_lineno
-        self.snapshot[arg] = (backup_locals, lineno)
+        self.snapshot[args] = (backup_locals, lineno)
 
-    def do_restore(self, arg):
-        if arg not in self.snapshot:
+    def do_restore(self, args):
+        if args not in self.snapshot:
             print 'no such name'
             return
-        if not self.jump_to(self.snapshot[arg][1]):
+        if not self.jump_to(self.snapshot[args][1]):
             print 'can not jump'
             return
 
-        self.restore_env(self.snapshot[arg][0])
+        self.restore_env(self.snapshot[args][0])
     
-    def do_diff(self, arg):
-        if arg not in self.snapshot:
+    def do_diff(self, args):
+        if args not in self.snapshot:
             print 'no such name'
             return
 
-        result = diff_dict(self.snapshot[arg][0], self.curframe_locals)
+        result = diff_dict(self.snapshot[args][0], self.curframe_locals)
         for i in result:
             print 'variable name: ', i
             print '------------------'
@@ -87,12 +88,12 @@ class RecoverablePdb(pdb.Pdb):
         for i in need_to_delete:
             del self.curframe_locals[i]
 
-    def jump_to(self, arg):
+    def jump_to(self, args):
         if self.curindex + 1 != len(self.stack):
             print >>self.stdout, "*** You can only jump within the bottom frame"
             return False
         try:
-            arg = int(arg)
+            args = int(args)
         except ValueError:
             print >>self.stdout, "*** The 'jump' command requires a line number."
             return False
@@ -100,13 +101,43 @@ class RecoverablePdb(pdb.Pdb):
             try:
                 # Do the jump, fix up our copy of the stack, and display the
                 # new position
-                self.curframe.f_lineno = arg
-                self.stack[self.curindex] = self.stack[self.curindex][0], arg
+                self.curframe.f_lineno = args
+                self.stack[self.curindex] = self.stack[self.curindex][0], args
                 self.print_stack_entry(self.stack[self.curindex])
             except ValueError, e:
                 print >>self.stdout, '*** Jump failed:', e
                 return False
         return True
+
+    def save_env_for_undo(self):
+        backup_locals = try_copy(self.curframe_locals)
+        lineno = self.curframe.f_lineno
+        self.undo_stack.append((backup_locals, lineno))
+
+    def do_step(self, args):
+        self.save_env_for_undo()
+        # remember return 1
+        return pdb.Pdb.do_step(self, args)
+
+    do_s = do_step
+
+    def do_next(self, args):
+        self.save_env_for_undo()
+        # remember return 1
+        return pdb.Pdb.do_next(self, args)
+
+    def do_undo(self, args):
+        if len(self.undo_stack) > 0:
+            env = self.undo_stack.pop()
+
+            if not self.jump_to(env[1]):
+                print 'can not jump'
+                return 
+
+            self.restore_env(env[0])
+        else:
+            print 'out of stack'
+
 
 
 def set_trace():
