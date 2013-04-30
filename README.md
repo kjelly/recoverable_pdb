@@ -49,3 +49,7 @@ diff snapshot_name
 jump 無法跳到其他 pyframe 去。
 
 註: 隨手寫的，沒有作嚴謹的測試。可能會有不少 bug。
+
+
+================
+contact me: http://about.me/ya790206
