@@ -1,0 +1,6 @@
+# 1232
+
+# use filename:line_num instead of line_num
+# or it won't set break point correctly.
+# break example.py:6
+break example_lib.py:6

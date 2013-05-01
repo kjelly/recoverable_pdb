@@ -1,6 +1,14 @@
 import pdb
 import copy
 import sys
+import os
+
+
+def experiment(func):
+    def inner_func(*args, **kwargs):
+        print 'this is experiment function.'
+        return func(*args, **kwargs)
+    return inner_func
 
 
 def try_copy(data):
@@ -18,9 +26,9 @@ def try_copy(data):
             return copy.deepcopy(data)
         except Exception as e:
             # if the data can't be copied
-            pass 
+            pass
     # just return data.
-    return data 
+    return data
 
 
 def diff_dict(old, new):
@@ -43,6 +51,7 @@ class RecoverablePdb(pdb.Pdb):
         pdb.Pdb.__init__(self, *argss, **kwargss)
         self.snapshot = {}
         self.undo_stack = []
+        self.load_bp_info_from_file('breakpoint.info')
 
     def do_save(self, args):
         backup_locals = try_copy(self.curframe_locals)
@@ -58,7 +67,7 @@ class RecoverablePdb(pdb.Pdb):
             return
 
         self.restore_env(self.snapshot[args][0])
-    
+
     def do_diff(self, args):
         if args not in self.snapshot:
             print 'no such name'
@@ -132,11 +141,31 @@ class RecoverablePdb(pdb.Pdb):
 
             if not self.jump_to(env[1]):
                 print 'can not jump'
-                return 
+                return
 
             self.restore_env(env[0])
         else:
             print 'out of stack'
+
+    #@experiment
+    def do_load(self, args):
+        self.load_bp_info_from_file(args)
+
+    def load_bp_info_from_file(self, file_name):
+        if os.path.exists(file_name):
+            ftr = open(file_name, 'r')
+            bp_info = ftr.readlines()
+            ftr.close()
+            for line in bp_info:
+
+                if line[0] == '#':
+                    pass
+                elif (len(line) < 3 and line[-1] == '\n'):
+                    pass
+                else:
+                    print line
+                    self.onecmd(line)
+            print 'loaded breakpoint infomation.'
 
 
 
